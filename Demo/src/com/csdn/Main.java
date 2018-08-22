@@ -30,7 +30,8 @@ public class Main {
             System.setProperty(propName, value);
         }
         trustAll();
-
+        Connect connect = new Connect("https://172.17.7.249/sdk", "administrator@vsphere.local", "!!!Jcb410");
+        connect.getAllVirtualMachine();
     }
 
 
