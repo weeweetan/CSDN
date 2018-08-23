@@ -5,6 +5,7 @@ import com.csdn.connection.helpers.GetMOREF;
 import com.vmware.vim25.InvalidPropertyFaultMsg;
 import com.vmware.vim25.ManagedObjectReference;
 import com.vmware.vim25.RuntimeFaultFaultMsg;
+import com.vmware.vim25.VirtualMachineSummary;
 
 import java.util.Map;
 
@@ -41,5 +42,26 @@ public class Connect extends ConnectedVimServiceBase {
         } catch (RuntimeFaultFaultMsg runtimeFaultFaultMsg) {
             runtimeFaultFaultMsg.printStackTrace();
         }
+    }
+
+
+    void getVirtualMachineConfig() {
+        //ServiceContent这个类跟mob首页的ServiceContent对应起来的，这里相当于拿到一个容器
+        ManagedObjectReference propCol = connection.getServiceContent().getPropertyCollector();
+        getMOREFs = new GetMOREF(connection);
+        try {
+            //根据虚拟机名称拿到对应的引用
+            ManagedObjectReference vmRef = getMOREFs.vmByVMname("CentOS6.5", propCol);
+            //解析虚拟机summary属性
+            VirtualMachineSummary vmSummary = (VirtualMachineSummary)
+                    getMOREFs.entityProps(vmRef, new String[]{"summary"}).get("summary");
+            System.out.println(vmSummary.getConfig().getMemorySizeMB());
+            System.out.println(vmSummary.getConfig().getNumCpu());
+        } catch (InvalidPropertyFaultMsg invalidPropertyFaultMsg) {
+            invalidPropertyFaultMsg.printStackTrace();
+        } catch (RuntimeFaultFaultMsg runtimeFaultFaultMsg) {
+            runtimeFaultFaultMsg.printStackTrace();
+        }
+
     }
 }
