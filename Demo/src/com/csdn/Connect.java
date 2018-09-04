@@ -2,10 +2,7 @@ package com.csdn;
 
 import com.csdn.connection.ConnectedVimServiceBase;
 import com.csdn.connection.helpers.GetMOREF;
-import com.vmware.vim25.InvalidPropertyFaultMsg;
-import com.vmware.vim25.ManagedObjectReference;
-import com.vmware.vim25.RuntimeFaultFaultMsg;
-import com.vmware.vim25.VirtualMachineSummary;
+import com.vmware.vim25.*;
 
 import java.util.Map;
 
@@ -63,5 +60,39 @@ public class Connect extends ConnectedVimServiceBase {
             runtimeFaultFaultMsg.printStackTrace();
         }
 
+    }
+
+
+    void createDataStore() {
+        String datastore = "datastore-NFS";
+        String ESXiHost = "192.168.0.xx";             //Esxi服务器ip
+        String clientHost = "192.168.0.xxx";           //需要映射目录的服务器ip
+        String path = "/home/xxx";                   //映射的目录
+
+        try {
+            getMOREFs = new GetMOREF(connection);
+            Map<String, ManagedObjectReference> hostList =
+                    getMOREFs.inFolderByType(connection.getServiceContent().getRootFolder(),
+                            "HostSystem");
+            ManagedObjectReference hostMor = hostList.get(ESXiHost);
+            if (hostMor != null) {
+                HostConfigManager configMgr =
+                        (HostConfigManager) getMOREFs.entityProps(hostMor,
+                                new String[]{"configManager"}).get("configManager");
+                ManagedObjectReference nwSystem = configMgr.getDatastoreSystem();
+                HostNasVolumeSpec spec = new HostNasVolumeSpec();           //实例化一个主机卷配置对象
+                spec.setType("NFS");
+                spec.setAccessMode("readWrite");
+                spec.setLocalPath(datastore);
+                spec.setRemoteHost(clientHost);
+                spec.setRemotePath(path);
+                connection.getVimPort().createNasDatastore(nwSystem, spec);                 //调用Web Service接口创建datastore
+                System.out.println("create NFS datastore success");
+            } else {
+                System.out.println("Host not found");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
